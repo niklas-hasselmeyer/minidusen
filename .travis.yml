@@ -1,14 +1,24 @@
 language: ruby
 rvm:
   - "2.1.8"
-services:
-  - mysql
-  - postgresql
-before_script: rake travis_ci:prepare
-script: rake all:bundle all:spec
+  - "2.3.1"
+gemfile:
+  - gemfiles/Gemfile.3.2.mysql2
+  - gemfiles/Gemfile.4.2.mysql2
+  - gemfiles/Gemfile.4.2.pg
+before_script:
+  - psql -c 'create database dusen_test;' -U postgres
+  - mysql -e 'create database IF NOT EXISTS dusen_test;'
+script: bundle exec rspec spec
+sudo: false
+cache: bundler
 notifications:
   email:
     - fail@makandra.de
 branches:
   only:
     - master
+matrix:
+  exclude:
+    - rvm: "2.3.1"
+      gemfile: gemfiles/Gemfile.3.2.mysql2
