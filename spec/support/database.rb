@@ -4,13 +4,13 @@ require 'yaml'
 case ENV['BUNDLE_GEMFILE']
 when /pg/
   if ENV['TRAVIS']
-    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'active_type_test', :username => 'postgres')
+    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'minidusen_test', :username => 'postgres')
   else
-    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'active_type_test')
+    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'minidusen_test')
   end
 # mysql2?
 when /mysql2/
-  config = { :adapter => 'mysql2', :encoding => 'utf8', :database => 'active_type_test' }
+  config = { :adapter => 'mysql2', :encoding => 'utf8', :database => 'minidusen_test' }
   custom_config_path = File.join(File.dirname(__FILE__), 'database.yml')
   if File.exists?(custom_config_path)
     custom_config = YAML.load_file(custom_config_path)

@@ -23,6 +23,7 @@ GEM
       tzinfo (~> 1.1)
     arel (6.0.3)
     builder (3.2.2)
+    byebug (8.2.0)
     diff-lcs (1.2.5)
     edge_rider (0.3.1)
       activerecord
@@ -52,6 +53,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (~> 4.2.1)
+  byebug
   dusen!
   mysql2 (~> 0.3.17)
   rspec (~> 3.4)

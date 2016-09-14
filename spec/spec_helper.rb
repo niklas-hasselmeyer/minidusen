@@ -1,6 +1,7 @@
 $: << File.join(File.dirname(__FILE__), "/../../lib" )
 
-require 'active_type'
+require 'dusen'
+require 'byebug'
 
 ActiveRecord::Base.default_timezone = :local
 

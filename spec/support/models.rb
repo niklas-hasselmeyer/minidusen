@@ -7,6 +7,8 @@ class User < ActiveRecord::Base
     end
 
     search_by :city do |scope, city|
+      # scope.scoped(:conditions => { :city => city })
+      # scope.scoped(:conditions => ['city = ?', city]) #:conditions => { :city => city })
       scope.scoped(:conditions => { :city => city })
     end
 

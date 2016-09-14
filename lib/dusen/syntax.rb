@@ -39,13 +39,7 @@ module Dusen
     private
 
     DEFAULT_UNKNOWN_SCOPER = lambda do |scope, *args|
-      if scope.respond_to?(:where)
-        # Rails 3
-        scope.where('1=2')
-      else
-        # Rails 2
-        scope.scoped(:conditions => ['1=2'])
-      end
+      scope.where('1=2')
     end
 
     def unknown_scoper
@@ -63,14 +57,35 @@ module Dusen
 
     def build_exclude_scope(root_scope, exclude_query)
       root_scope_without_conditions = root_scope.except(:where)
+      root_scope_without_conditions.bind_values = []
       exclude_scope = find_parsed_query(root_scope_without_conditions, exclude_query)
-      exclude_scope_conditions = concatenate_where_values(exclude_scope.where_values)
-      if exclude_scope_conditions.present?
-        inverted_sql = "NOT COALESCE (" + exclude_scope_conditions + ",0)"
-        exclude_scope.except(:where).where(inverted_sql)
-      else
-        # we cannot build an inverted scope without where-conditions
 
+      puts "exclude_scope before coalesce: #{exclude_scope.to_sql}"
+
+      bind_values = exclude_scope.bind_values.map { |tuple| tuple[1] }
+      exclude_scope_conditions = concatenate_where_values(exclude_scope.where_values)
+
+
+      if exclude_scope_conditions.present?
+        # byebug if exclude_scope.where_values.present?
+        inverted_sql = "NOT COALESCE (" + exclude_scope_conditions + ",0)"
+
+        # puts "Bind values are #{(bind_values.inspect)}"
+        # puts "Resulting scope is #{exclude_scope.except(:where).where(inverted_sql, *bind_values).to_sql}"
+
+        # rebuilt_scope = exclude_scope.except(:where)
+
+        exclude_scope.except(:where).where(inverted_sql, *bind_values)
+
+        # rebuilt_scope = exclude_scope
+        # rebuilt_scope = rebuilt_scope.except(:where)
+        # rebuilt_scope = rebuilt_scope.where(inverted_sql)
+        # rebuilt_scope.bind_values = bind_values
+        # rebuilt_scope
+
+      else
+        # unknown_scoper.call(root_scope)
+        warn "komisch"
         root_scope
       end
     end

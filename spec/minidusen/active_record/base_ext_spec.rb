@@ -1,6 +1,9 @@
 require 'spec_helper'
 
-shared_examples_for 'model with search syntax' do
+
+describe ActiveRecord::Base do
+
+  subject { User }
 
   describe '#search' do
 
@@ -123,8 +126,15 @@ shared_examples_for 'model with search syntax' do
       end
 
       it 'respects an existing scope chain when there are only excluded tokens (bugfix)' do
+
+        puts "----------------"
+
         match = subject.create!(:name => 'Abraham', :city => 'Foohausen')
         no_match = subject.create!(:name => 'Abraham', :city => 'Barhausen')
+        also_no_match = subject.create!(:name => 'Bebraham', :city => 'Foohausen')
+
+        # puts "Scope before search is #{subject.scoped(:conditions => { :name => 'Abraham' })
+
         subject.scoped(:conditions => { :name => 'Abraham' }).search('-Barhausen').to_a.should == [match]
       end
 
@@ -179,7 +189,7 @@ shared_examples_for 'model with search syntax' do
     end
 
   end
-  
+
   describe '.where_like' do
 
     it 'matches a record if a word appears in any of the given columns' do
@@ -188,7 +198,7 @@ shared_examples_for 'model with search syntax' do
       no_match = subject.create!(:name => 'XXXX', :city => 'XXXX')
       subject.where_like([:name, :city] => 'word').to_a.should =~ [match1, match2]
     end
-    
+
     it 'matches a record if it contains all the given words' do
       match1 = subject.create!(:city => 'word1 word2')
       match2 = subject.create!(:city => 'word2 word1')
@@ -219,21 +229,7 @@ shared_examples_for 'model with search syntax' do
       end
 
     end
-    
-  end
-
-end
-
-
-describe ActiveRecord::Base do
-
-  describe 'for a model without an associated FULLTEXT table' do
-
-    subject { User }
-
-    it_should_behave_like 'model with search syntax'
 
   end
-
 
 end
