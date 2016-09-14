@@ -142,7 +142,7 @@ describe Minidusen::Filter do
         user_filter.filter(user_scope, '-Barhausen').to_a.should == [match]
       end
 
-      it 'should work if there are fields contained in the search that are NULL (needs NOT COALESCE in syntax#search)' do
+      it 'should work if there are fields contained in the search that are NULL' do
         match = User.create!(:name => 'Sunny Flower', :city => nil, :email => nil)
         no_match = User.create!(:name => 'Sunny Power', :city => nil, :email => nil)
         no_match2 = User.create!(:name => 'Absolutly no match')
