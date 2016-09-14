@@ -18,5 +18,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency('activerecord', '>=3.2')
   s.add_dependency('edge_rider', '>=0.2.5')
+  s.add_dependency('sql_tree', '>=0.2.0')
 
 end

@@ -1,5 +1,6 @@
 require 'active_record'
 require 'edge_rider'
+require 'sql_tree'
 
 require 'dusen/version'
 require 'dusen/util'
