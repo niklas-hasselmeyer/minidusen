@@ -1,7 +1,3 @@
-# encoding: utf-8
-
-require 'spec_helper'
-
 describe Minidusen::Parser do
 
   describe '.parse' do

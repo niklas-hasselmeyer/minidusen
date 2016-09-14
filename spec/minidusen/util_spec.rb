@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe Minidusen::Util do
 
   describe '.boolean_fulltext_query' do

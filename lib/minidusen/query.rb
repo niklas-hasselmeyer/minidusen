@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Minidusen
   class Query
 
@@ -18,12 +16,6 @@ module Minidusen
     def [](index)
       tokens[index]
     end
-
-    #def +(tokens)
-    #  tokens.each do |token|
-    #    self << token
-    #  end
-    #end
 
     def to_s
       collect(&:to_s).join(" + ")
