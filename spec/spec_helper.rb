@@ -10,6 +10,9 @@ Dir["#{File.dirname(__FILE__)}/shared_examples/*.rb"].sort.each {|f| require f}
 
 
 RSpec.configure do |config|
+
+  config.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
+
   config.around do |example|
     if example.metadata.fetch(:rollback, true)
       ActiveRecord::Base.transaction do

@@ -132,15 +132,9 @@ describe ActiveRecord::Base do
       end
 
       it 'respects an existing scope chain when there are only excluded tokens (bugfix)' do
-
-        puts "----------------"
-
         match = subject.create!(:name => 'Abraham', :city => 'Foohausen')
         no_match = subject.create!(:name => 'Abraham', :city => 'Barhausen')
         also_no_match = subject.create!(:name => 'Bebraham', :city => 'Foohausen')
-
-        # puts "Scope before search is #{subject.scoped(:conditions => { :name => 'Abraham' })
-
         subject.scoped(:conditions => { :name => 'Abraham' }).search('-Barhausen').to_a.should == [match]
       end
 

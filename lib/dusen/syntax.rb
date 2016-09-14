@@ -19,13 +19,11 @@ module Dusen
     def search(root_scope, query)
       query = parse(query) if query.is_a?(String)
       query = query.condensed
-      matches = find_parsed_query(root_scope, query.include)
+      matches = apply_query(root_scope, query.include)
       if query.exclude.any?
-        inverted_exclude_scope = build_exclude_scope(root_scope, query.exclude)
-        matches.merge(inverted_exclude_scope)
-      else
-        matches
+        matches = append_excludes(matches, query.exclude)
       end
+      matches
     end
 
     def fields
@@ -46,7 +44,7 @@ module Dusen
       @unknown_scoper || DEFAULT_UNKNOWN_SCOPER
     end
 
-    def find_parsed_query(root_scope, query)
+    def apply_query(root_scope, query)
       scope = root_scope
       query.each do |token|
         scoper = @scopers[token.field] || unknown_scoper
@@ -55,53 +53,14 @@ module Dusen
       scope
     end
 
-    def build_exclude_scope(root_scope, exclude_query)
-      root_scope_without_conditions = root_scope.except(:where)
-      root_scope_without_conditions.bind_values = []
-      exclude_scope = find_parsed_query(root_scope_without_conditions, exclude_query)
-
-      puts "exclude_scope before coalesce: #{exclude_scope.to_sql}"
-
-      bind_values = exclude_scope.bind_values.map { |tuple| tuple[1] }
-
-
-      exclude_scope_conditions = concatenate_where_values(exclude_scope.where_values)
-
-
-      if exclude_scope_conditions.present?
-        # byebug if exclude_scope.where_values.present?
-        false_string = exclude_scope.connection.quoted_false
-        inverted_sql = "NOT COALESCE (" + exclude_scope_conditions + ", #{false_string})"
-
-        # puts "Bind values are #{(bind_values.inspect)}"
-        # puts "Resulting scope is #{exclude_scope.except(:where).where(inverted_sql, *bind_values).to_sql}"
-
-        # rebuilt_scope = exclude_scope.except(:where)
-
-        exclude_scope.except(:where).where(inverted_sql, *bind_values)
-
-        # rebuilt_scope = exclude_scope
-        # rebuilt_scope = rebuilt_scope.except(:where)
-        # rebuilt_scope = rebuilt_scope.where(inverted_sql)
-        # rebuilt_scope.bind_values = bind_values
-        # rebuilt_scope
-
-      else
-        # unknown_scoper.call(root_scope)
-        warn "komisch"
-        root_scope
-      end
-    end
-
-    def build_exclude_scope(root_scope, exclude_query)
+    def append_excludes(matches, exclude_query)
       # root_scope_without_conditions = root_scope.except(:where)
       # root_scope_without_conditions.bind_values = [] if root_scope_without_conditions.respond_to?(:bind_values=)
       # root_scope_without_conditions = root_scope.origin_class
-      exclude_scope = find_parsed_query(root_scope.origin_class, exclude_query)
-
-      qualified_id_field = "#{root_scope.table_name}.#{root_scope.primary_key}"
-
-      return root_scope.origin_class.where("#{qualified_id_field} NOT IN (#{exclude_scope.select(qualified_id_field).to_sql})")
+      excluded_records = apply_query(matches.origin_class, exclude_query)
+      qualified_id_field = "#{excluded_records.table_name}.#{excluded_records.primary_key}"
+      exclude_sql = "#{qualified_id_field} NOT IN (#{excluded_records.select(qualified_id_field).to_sql})"
+      matches.where(exclude_sql)
 
       # puts "exclude_scope before coalesce: #{exclude_scope.to_sql}"
       #
