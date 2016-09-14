@@ -3,6 +3,7 @@ PATH
   specs:
     minidusen (0.1.0)
       activerecord (>= 3.2)
+      activesupport (>= 3.2)
       edge_rider (>= 0.2.5)
 
 GEM

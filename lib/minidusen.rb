@@ -1,3 +1,4 @@
+require 'active_support'
 require 'active_record'
 require 'edge_rider'
 

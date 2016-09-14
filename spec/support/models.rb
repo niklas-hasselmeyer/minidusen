@@ -2,8 +2,8 @@ class User < ActiveRecord::Base
 
   search_syntax do
 
-    search_by :text do |scope, text|
-      scope.where_like([:name, :email, :city] => text)
+    search_by :text do |scope, phrases|
+      scope.where_like([:name, :email, :city] => phrases)
     end
 
     search_by :city do |scope, city|

@@ -101,7 +101,7 @@ to our model:
 
     search_syntax do
 
-      search_by :text do |scope, phrase|
+      search_by :text do |scope, phrases|
         ...
       end
 
