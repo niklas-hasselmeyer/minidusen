@@ -1,24 +1,21 @@
 # This is the DSL to describe a Syntax.
 module Minidusen
   module Filter
-    extend ActiveSupport::Concern
-
-    included do
-
-      self.minidusen_syntax = Syntax.new
-
-    end
-
-    class_methods do
+    module ClassMethods
 
       private
 
-      attr_reader :minidusen_syntax
+      attr_accessor :minidusen_syntax
 
       def filter(field, &block)
         minidusen_syntax.learn_field(field, &block)
       end
 
+    end
+
+    def self.included(base)
+      base.extend(ClassMethods)
+      base.send(:minidusen_syntax=, Syntax.new)
     end
 
     def filter(scope, query)
@@ -27,7 +24,9 @@ module Minidusen
 
     private
 
-    delegate :minidusen_syntax, to: :class
+    def minidusen_syntax
+      self.class.send(:minidusen_syntax)
+    end
 
   end
 end
