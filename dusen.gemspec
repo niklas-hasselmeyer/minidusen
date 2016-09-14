@@ -1,12 +1,12 @@
 $:.push File.expand_path("../lib", __FILE__)
-require "dusen/version"
+require "minidusen/version"
 
 Gem::Specification.new do |s|
-  s.name = 'dusen'
-  s.version = Dusen::VERSION
+  s.name = 'minidusen'
+  s.version = Minidusen::VERSION
   s.authors = ["Henning Koch"]
   s.email = 'henning.koch@makandra.de'
-  s.homepage = 'https://github.com/makandra/dusen'
+  s.homepage = 'https://github.com/makandra/minidusen'
   s.summary = 'Comprehensive full text search for ActiveRecord and MySQL'
   s.description = s.summary
   s.license = 'MIT'

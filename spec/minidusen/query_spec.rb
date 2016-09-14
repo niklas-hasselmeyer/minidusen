@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Dusen::Query do
+describe Minidusen::Query do
 
   describe '#condensed' do
 
     it 'should return a version of the query where all text tokens have been collapsed into a single token with an Array value' do
-      query = Dusen::Parser.parse('field:value foo bar baz')
+      query = Minidusen::Parser.parse('field:value foo bar baz')
       query.tokens.size.should == 4
       condensed_query = query.condensed
       condensed_query.tokens.size.should == 2

@@ -181,7 +181,7 @@ describe ActiveRecord::Base do
   describe '.search_syntax' do
 
     it "should return the model's syntax definition when called without a block" do
-      subject.search_syntax.should be_a(Dusen::Syntax)
+      subject.search_syntax.should be_a(Minidusen::Syntax)
     end
 
     it 'should be callable multiple times, appending additional syntax' do

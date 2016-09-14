@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    dusen (0.1.0)
+    minidusen (0.1.0)
       activerecord (>= 3.2)
       edge_rider (>= 0.2.5)
       sql_tree (>= 0.2.0)
@@ -56,7 +56,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord (~> 4.2.1)
   byebug
-  dusen!
+  minidusen!
   pg
   rspec (~> 3.4)
 

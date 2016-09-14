@@ -1,6 +1,6 @@
 require 'set'
 
-module Dusen
+module Minidusen
   module ActiveRecord
     class SearchText < ::ActiveRecord::Base
 
@@ -44,7 +44,7 @@ module Dusen
 
       def self.match(model, phrases)
         synchronize_model(model) if model.search_text?
-        Dusen::Util.append_scope_conditions(
+        Minidusen::Util.append_scope_conditions(
           model,
           :id => matching_source_ids(model, phrases)
         )
@@ -54,9 +54,9 @@ module Dusen
         phrases = phrases.collect { |phrase| Util.normalize_word_boundaries(phrase) }
         conditions = [
           'MATCH (words) AGAINST (? IN BOOLEAN MODE)',
-          Dusen::Util.boolean_fulltext_query(phrases)
+          Minidusen::Util.boolean_fulltext_query(phrases)
         ]
-        matching_texts = Dusen::Util.append_scope_conditions(for_model(model), conditions)
+        matching_texts = Minidusen::Util.append_scope_conditions(for_model(model), conditions)
         matching_texts.collect_column(:source_id)
       end
 

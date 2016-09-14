@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    dusen (0.1.0)
+    minidusen (0.1.0)
       activerecord (>= 3.2)
       edge_rider (>= 0.2.5)
       sql_tree (>= 0.2.0)
@@ -51,8 +51,8 @@ PLATFORMS
 DEPENDENCIES
   activerecord (= 3.2.22)
   byebug
-  dusen!
   i18n (= 0.6.11)
+  minidusen!
   mysql2 (= 0.3.17)
   rspec (~> 3.4)
 

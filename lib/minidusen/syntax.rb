@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module Dusen
+module Minidusen
   class Syntax
 
     def initialize

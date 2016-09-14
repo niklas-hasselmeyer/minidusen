@@ -6,4 +6,4 @@ gem 'pg'
 
 gem 'byebug'
 
-gem 'dusen', :path => '..'
+gem 'minidusen', :path => '..'

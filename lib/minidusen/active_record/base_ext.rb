@@ -1,13 +1,13 @@
 # encoding: utf-8
 
-module Dusen
+module Minidusen
   module ActiveRecord
     module BaseExt
       module ClassMethods
 
         def search_syntax(&dsl)
-          @search_syntax ||= Dusen::Syntax.new
-          Dusen::Description.parse_syntax(@search_syntax, &dsl) if dsl
+          @search_syntax ||= Minidusen::Syntax.new
+          Minidusen::Description.parse_syntax(@search_syntax, &dsl) if dsl
           unless singleton_class.method_defined?(:search)
             singleton_class.send(:define_method, :search) do |query_string|
               @search_syntax.search(scoped({}), query_string)
@@ -21,14 +21,14 @@ module Dusen
         end
 
         def index_search_texts
-          Dusen::ActiveRecord::SearchText.synchronize_model(self)
+          Minidusen::ActiveRecord::SearchText.synchronize_model(self)
         end
 
         def search_text(&text)
 
           @has_search_text = true
 
-          has_one :search_text_record, :as => :source, :dependent => :destroy, :class_name => '::Dusen::ActiveRecord::SearchText', :inverse_of => :source
+          has_one :search_text_record, :as => :source, :dependent => :destroy, :class_name => '::Minidusen::ActiveRecord::SearchText', :inverse_of => :source
 
           after_create :create_initial_search_text_record
 
@@ -66,7 +66,7 @@ module Dusen
 
           search_syntax do
             search_by :text do |scope, phrases|
-              Dusen::ActiveRecord::SearchText.match(scope, phrases)
+              Minidusen::ActiveRecord::SearchText.match(scope, phrases)
             end
           end
 
@@ -109,7 +109,7 @@ module Dusen
               phrase_with_placeholders = fields.collect { |field|
                 "#{field} #{match_operator} ?"
               }.join(" #{join_operator} ")
-              like_expression = Dusen::Util.like_expression(phrase)
+              like_expression = Minidusen::Util.like_expression(phrase)
               bindings = [like_expression] * fields.size
               conditions = [ phrase_with_placeholders, *bindings ]
               scope = Util.append_scope_conditions(scope, conditions)
@@ -123,5 +123,5 @@ module Dusen
   end
 end
 
-ActiveRecord::Base.send(:extend, Dusen::ActiveRecord::BaseExt::ClassMethods)
+ActiveRecord::Base.send(:extend, Minidusen::ActiveRecord::BaseExt::ClassMethods)
 

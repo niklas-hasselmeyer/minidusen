@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module Dusen
+module Minidusen
   module Util
     extend self
 
@@ -49,7 +49,7 @@ module Dusen
 
     def boolean_fulltext_query(phrases)
       phrases.collect do |word|
-        escaped_word = Dusen::Util.escape_for_boolean_fulltext_query(word)
+        escaped_word = Minidusen::Util.escape_for_boolean_fulltext_query(word)
         if escaped_word =~ /\s/
           %{+"#{escaped_word}"} # no prefixed wildcard possible for phrases
         else

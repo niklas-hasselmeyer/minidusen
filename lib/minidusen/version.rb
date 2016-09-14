@@ -1,5 +1,5 @@
 # encoding: utf-8
 
-module Dusen
+module Minidusen
   VERSION = '0.1.0'
 end

@@ -1,6 +1,6 @@
-#namespace :dusen do
+#namespace :minidusen do
 #
-#  desc 'Creates a MyISAM table "search_texts" for fast Dusen searches'
+#  desc 'Creates a MyISAM table "search_texts" for fast Minidusen searches'
 #  task :create_search_text do
 #    generator = File.exists?('script/generate') ? 'script/generate' : 'rails generate'
 #    output = `#{generator} migration CreateSearchText`

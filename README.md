@@ -1,10 +1,10 @@
-Dusen [![Build Status](https://secure.travis-ci.org/makandra/dusen.png?branch=master)](https://travis-ci.org/makandra/dusen)
+Minidusen [![Build Status](https://secure.travis-ci.org/makandra/minidusen.png?branch=master)](https://travis-ci.org/makandra/minidusen)
 ======
 
 Comprehensive search solution for ActiveRecord and MySQL
 --------------------------------------------------------
 
-Dusen lets you search ActiveRecord model when all you have is MySQL (no Solr, Sphinx, etc.). Here's what Dusen does for you:
+Minidusen lets you search ActiveRecord model when all you have is MySQL (no Solr, Sphinx, etc.). Here's what Minidusen does for you:
 
 1. It takes a text query in Google-like search syntax e.g. `some words "a phrase" filetype:pdf -excluded -"excluded  phrase" filetype:-txt`)
 2. It parses the query into individual tokens.
@@ -18,7 +18,7 @@ Processing full text search queries with LIKE queries
 This describes how to define a search syntax that processes queries
 of words and phrases, e.g. `coworking fooville "market ave"`.
 
-Under the hood the search will be performed using [LIKE queries](http://dev.mysql.com/doc/refman/5.0/en/string-comparison-functions.html#operator_like), which are [fast enough](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search) for medium sized data sets. Once your data outgrows LIKE queries, Dusen lets you [migrate to FULLTEXT indexes](#processing-full-text-queries-with-fulltext-indexes), which perform better but come at some added complexity.
+Under the hood the search will be performed using [LIKE queries](http://dev.mysql.com/doc/refman/5.0/en/string-comparison-functions.html#operator_like), which are [fast enough](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search) for medium sized data sets. Once your data outgrows LIKE queries, Minidusen lets you [migrate to FULLTEXT indexes](#processing-full-text-queries-with-fulltext-indexes), which perform better but come at some added complexity.
 
 
 ### Setup and usage
@@ -48,7 +48,7 @@ In order to teach `Contact` how to process a text query, use the `search_syntax`
     end
 
 
-Dusen will tokenize the query into individual phrases and call the `search_by :text` block with it. The block is expected to return a scope that filters by the given phrases.
+Minidusen will tokenize the query into individual phrases and call the `search_by :text` block with it. The block is expected to return a scope that filters by the given phrases.
 
 If, for example, we call `Contact.search('coworking fooville "market ave"')`
 the block supplied to `search_by :text` is called with the following arguments:
@@ -64,7 +64,7 @@ the given query:
 
 ### What where_like does under the hood
 
-Note that `where_like` is an utility method that comes with the Dusen gem.
+Note that `where_like` is an utility method that comes with the Minidusen gem.
 It takes one or more column names and one or more phrases and generates an SQL fragment
 that looks roughly like the following:
 
@@ -88,7 +88,7 @@ You can also use `where_like` to find all the records *not* matching some phrase
 Processing queries for qualified fields
 ---------------------------------------
 
-Google supports queries like `filetype:pdf` that filters records by some criteria without performing a full text search. Dusen gives you a simple way to support such search syntax.
+Google supports queries like `filetype:pdf` that filters records by some criteria without performing a full text search. Minidusen gives you a simple way to support such search syntax.
 
 ### Setup and usage
 
@@ -125,7 +125,7 @@ Note that you can combine text tokens and field tokens:
     
 ### Caveat
 
-If you search for a phrase containing a colon (e.g. `deploy:rollback`), Dusen
+If you search for a phrase containing a colon (e.g. `deploy:rollback`), Minidusen
 will mistake the first part as a – nonexistent – qualifier and return an empty
 set.
 
@@ -139,7 +139,7 @@ Processing full text queries with FULLTEXT indexes
 
 ### When do I need this?
 
-As your number of records grows larger, you might outgrow a full text implementation that uses LIKE (see [performance analysis](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search)). For this case Dusen ships with an alternative full text search solution using MySQL FULLTEXT indexes that scale much better.
+As your number of records grows larger, you might outgrow a full text implementation that uses LIKE (see [performance analysis](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search)). For this case Minidusen ships with an alternative full text search solution using MySQL FULLTEXT indexes that scale much better.
 
 ### Understanding the MyISAM limitation
 
@@ -147,7 +147,7 @@ Using this feature comes at some added complexity so you should first check if s
 
 Currently stable MySQL versions only allow FULLTEXT indexes on MyISAM tables (this will change in MySQL 5.6). You don't however want to migrate your models to MyISAM tables because of their many limitations (poor crash recovery, no transactions, etc.).
 
-To work around this, Dusen uses a separate MyISAM table `search_texts` to index your searchable text. Each row in your model's table will be shadowed by a corresponding row in `search_texts`. Dusen will automatically create, update and destroy these shadow rows as your model records change.
+To work around this, Minidusen uses a separate MyISAM table `search_texts` to index your searchable text. Each row in your model's table will be shadowed by a corresponding row in `search_texts`. Minidusen will automatically create, update and destroy these shadow rows as your model records change.
 
 
 ### Setup and usage
@@ -191,7 +191,7 @@ We now need to your model which text to index. We do this using the `search_text
 
     end
 
-You can return any object or array of objects. Dusen will stringify the return value and index those words. Note that indexed words do not need to be fields of your model:
+You can return any object or array of objects. Minidusen will stringify the return value and index those words. Note that indexed words do not need to be fields of your model:
 
     search_text do
       [email, city, author.screen_name, ('client' if client?)
@@ -212,12 +212,12 @@ If you migrated an existing table to FULLTEXT search, you must build the index f
 
     Model.all.each(&:index_search_text)
 
-You only need to do this once. Dusen will automatically index all further changes to your records.
+You only need to do this once. Minidusen will automatically index all further changes to your records.
 
 
 ### Indexing changes in associated records
 
-Dusen lets you index words from associated models. When you do this you need to reindex the indexed model whenever an associated record changes, or else the indexed text will be out of date.
+Minidusen lets you index words from associated models. When you do this you need to reindex the indexed model whenever an associated record changes, or else the indexed text will be out of date.
 
 As an example we will associate `Contact` with an `Organization` and make it searchable by the name of her `Organization`:
 
@@ -273,20 +273,20 @@ This can be practical if you want to index a record under the same words as its 
 Programmatic access without DSL
 -------------------------------
 
-You can use Dusen's functionality without using the ActiveRecord DSL or the `search` method.
+You can use Minidusen's functionality without using the ActiveRecord DSL or the `search` method.
 **Please note that at this time we cannot yet commit to the API of these internal methods**. So don't get mad when stuff breaks after you update the gem.
 
 Here are some method calls to get you started:
 
-    Contact.search_syntax # => #<Dusen::Syntax>
+    Contact.search_syntax # => #<Minidusen::Syntax>
 
-    syntax = Dusen::Syntax.new
+    syntax = Minidusen::Syntax.new
     syntax.learn_field :email do |scope, email|
       scope.where(:email => email)
     end
 
-    query = Dusen::Parser.parse('fooville email:foo@bar.com') # => #<Dusen::Query>
-    query.tokens # => [#<Dusen::Token field: 'text', value: 'fooville'>, #<Dusen::Token field: 'email', value: 'foo@bar.com'>]
+    query = Minidusen::Parser.parse('fooville email:foo@bar.com') # => #<Minidusen::Query>
+    query.tokens # => [#<Minidusen::Token field: 'text', value: 'fooville'>, #<Minidusen::Token field: 'email', value: 'foo@bar.com'>]
     query.to_s # => "fooville + foo@bar.com"
 
     syntax.search(Contact, query) # => #<ActiveRecord::Relation>
@@ -295,7 +295,7 @@ Here are some method calls to get you started:
 Supported Rails versions
 ------------------------
 
-Dusen is tested against Rails 3.0 and Rails 3.2. There is also a branch rails-2-3, which is tested against Rails 2.3.
+Minidusen is tested against Rails 3.0 and Rails 3.2. There is also a branch rails-2-3, which is tested against Rails 2.3.
 
 
 Installation
@@ -303,7 +303,7 @@ Installation
 
 In your `Gemfile` say:
 
-    gem 'dusen'
+    gem 'minidusen'
 
 Now run `bundle install` and restart your server.
 

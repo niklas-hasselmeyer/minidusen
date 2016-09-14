@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # This is the DSL to describe a Syntax.
-module Dusen
+module Minidusen
   class Description
 
     attr_reader :syntax
