@@ -13,6 +13,12 @@ describe ActiveRecord::Base do
       subject.search('Abraham').to_a.should == [match]
     end
 
+    it 'should make a case-insensitive search' do
+      match = subject.create!(:name => 'Abraham')
+      no_match = subject.create!(:name => 'Elizabath')
+      subject.search('aBrAhAm').to_a.should == [match]
+    end
+
     it 'should not find stale text after fields were updated (bugfix)' do
       match = subject.create!(:name => 'Abraham')
       no_match = subject.create!(:name => 'Elizabath')

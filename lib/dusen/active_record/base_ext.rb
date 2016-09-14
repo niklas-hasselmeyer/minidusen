@@ -90,11 +90,14 @@ module Dusen
 
         def where_like(conditions, options = {})
           scope = scoped
+
+          ilike_operator = Util.ilike_operator(scope)
+
           if options[:negate]
-            match_operator = 'NOT LIKE'
+            match_operator = "NOT #{ilike_operator}"
             join_operator = 'AND'
           else
-            match_operator = 'LIKE'
+            match_operator = ilike_operator
             join_operator = 'OR'
           end
 

@@ -68,7 +68,8 @@ module Dusen
 
       if exclude_scope_conditions.present?
         # byebug if exclude_scope.where_values.present?
-        inverted_sql = "NOT COALESCE (" + exclude_scope_conditions + ",0)"
+        false_string = exclude_scope.connection.quoted_false
+        inverted_sql = "NOT COALESCE (" + exclude_scope_conditions + ", #{false_string})"
 
         # puts "Bind values are #{(bind_values.inspect)}"
         # puts "Resulting scope is #{exclude_scope.except(:where).where(inverted_sql, *bind_values).to_sql}"

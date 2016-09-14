@@ -17,6 +17,27 @@ module Dusen
       end
     end
 
+    def ilike_operator(scope)
+      if postgres?(scope)
+        'ILIKE'
+      else
+        'LIKE'
+      end
+    end
+
+    def regexp_operator(scope)
+      if postgres?(scope)
+        '~'
+      else
+        'REGEXP'
+      end
+    end
+
+    def postgres?(scope)
+      adapter_name = scope.connection.class.name
+      adapter_name =~ /postgres/i
+    end
+
     def escape_for_like_query(phrase)
       # phrase.gsub("%", "\\%").gsub("_", "\\_")
       escape_with_backslash(phrase, ['%', '_'])

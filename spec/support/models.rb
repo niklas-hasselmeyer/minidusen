@@ -26,8 +26,9 @@ class User < ActiveRecord::Base
 
     search_by :name_and_city_regex do |scope, regex|
       # Example for regexes that need to be and'ed together by syntax#build_exclude_scope
-      first = scope.where("users.name REGEXP ?", regex)
-      second = scope.where("users.city REGEXP ?", regex)
+      regexp_operator = Dusen::Util.regexp_operator(scope)
+      first = scope.where("users.name #{regexp_operator} ?", regex)
+      second = scope.where("users.city #{regexp_operator} ?", regex)
       first.merge(second)
     end
 
