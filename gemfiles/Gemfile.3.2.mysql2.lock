@@ -4,6 +4,7 @@ PATH
     dusen (0.1.0)
       activerecord (>= 3.2)
       edge_rider (>= 0.2.5)
+      sql_tree (>= 0.2.0)
 
 GEM
   remote: https://rubygems.org/
@@ -41,6 +42,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
     rspec-support (3.4.1)
+    sql_tree (0.2.0)
     tzinfo (0.3.46)
 
 PLATFORMS
