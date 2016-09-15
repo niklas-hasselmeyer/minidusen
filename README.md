@@ -40,9 +40,11 @@ Basic Usage
 
 Our example will be a simple address book:
 
-    class Contact < ActiveRecord::Base
-      validates_presence_of :name, :street, :city, :email
-    end
+```ruby
+class Contact < ActiveRecord::Base
+  validates_presence_of :name, :street, :city, :email
+end
+```
 
 We create a new class `ContactFilter` that will describe the searchable columns:
 
