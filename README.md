@@ -199,7 +199,7 @@ If you would like to contribute:
 - Push your changes **with passing specs**.
 - Send me a pull request.
 
-Note that we're very eager to keep this gem lightweight. If you're unsure whether a change would make it into the gem, [talk to me beforehand](mailto:henning.koch@makandra.de).
+Note that we're very eager to keep this gem lightweight. If you're unsure whether a change would make it into the gem, [open an issue](https://github.com/makandra/minidusen/issues/new).
 
 
 Credits
