@@ -1,4 +1,3 @@
-# This is the DSL to describe a Syntax.
 module Minidusen
   module Filter
     module ClassMethods

@@ -1,10 +1,9 @@
 mysql:
   database: minidusen_test
-  host: localhost
-  username: root
-  password: secret
+  username: travis
+  password:
 
 postgresql:
   database: minidusen_test
-  user:
+  user: postgres
   password:

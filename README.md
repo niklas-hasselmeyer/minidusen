@@ -1,27 +1,42 @@
 Minidusen [![Build Status](https://secure.travis-ci.org/makandra/minidusen.png?branch=master)](https://travis-ci.org/makandra/minidusen)
-======
+=========
 
-Low-tech search solution for ActiveRecord and MySQL or PostgreSQL
------------------------------------------------------------------
+Low-tech search solution for ActiveRecord with MySQL or PostgreSQL
+------------------------------------------------------------------
 
-Minidusen lets you search ActiveRecord model when all you have is MySQL or PostgreSQL (no Solr, Sphinx, etc.). Here's what Minidusen does for you:
+Minidusen lets you filter ActiveRecord models with a single query string.
+It works with your existing MySQL or PostgreSQL schema by mostly relying on simple `LIKE` queries. No additional indexes, tables or indexing databases are required.
 
-1. It takes a text query in Google-like search syntax e.g. `some words "a phrase" filetype:pdf -excluded -"excluded  phrase" filetype:-txt`)
-2. It parses the query into individual tokens.
-3. It lets you define simple mappers that convert a token to an ActiveRecord scope chain. Mappers can match tokens using ActiveRecord's `where` or perform full text searches with either [LIKE queries](#processing-full-text-search-queries-with-like-queries) or [FULLTEXT indexes](#processing-full-text-queries-with-fulltext-indexes) (see [performance analysis](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search)).
-4. It gives your model a method `Model.search('some query')` that performs all of the above and returns an ActiveRecord scope chain.
+Minidusen accepts a single, Google-like query string and converts it into `WHERE` conditions for [an ActiveRecord scope](http://guides.rubyonrails.org/active_record_querying.html#conditions).
+
+The following type of queries are supported:
+
+- `foo` (case-insensitive search for `foo` in developer-defined columns)
+- `foo bar` (rows must include both `foo` and `bar`)
+- `"foo bar"` (rows must include the phrase `"foo bar"`)
+- `-bar` (rows must not include the word `bar`)
+- `filetype:pdf` (developer-defined filter for file type)
+- `some words 'a phrase' filetype:pdf -excluded -'excluded  phrase' -filetype:pdf` (combination of the above)
+
+Minidusen is a quick way to implement find-as-you-type filters for index views:
+
+![A list of records filtered by a query](https://raw.githubusercontent.com/makandra/minidusen/master/doc/filtered_index_view.png)
+
+We have found it to scale well for many thousand records. It's probably not a good idea to use Minidusen for hundreds of thousands of records or very long text columns. For this we recommend to use PostgreSQL with [pg_search](https://github.com/Casecommons/pg_search) or full-text databases like [Solr](https://github.com/sunspot/sunspot).
 
 
-Processing full text search queries with LIKE queries
------------------------------------------------------
+Installation
+------------
 
-This describes how to define a search syntax that processes queries
-of words and phrases, e.g. `coworking fooville "market ave"`.
+In your `Gemfile` say:
 
-Under the hood the search will be performed using [LIKE queries](http://dev.mysql.com/doc/refman/5.0/en/string-comparison-functions.html#operator_like), which are [fast enough](https://makandracards.com/makandra/12813-performance-analysis-of-mysql-s-fulltext-indexes-and-like-queries-for-full-text-search) for medium sized data sets. Once your data outgrows LIKE queries, Minidusen lets you [migrate to FULLTEXT indexes](#processing-full-text-queries-with-fulltext-indexes), which perform better but come at some added complexity.
+    gem 'minidusen'
+
+Now run `bundle install` and restart your server.
 
 
-### Setup and usage
+Basic Usage
+-----------
 
 Our example will be a simple address book:
 
@@ -29,110 +44,112 @@ Our example will be a simple address book:
       validates_presence_of :name, :street, :city, :email
     end
 
+We create a new class `ContactFilter` that will describe the searchable columns:
 
-In order to teach `Contact` how to process a text query, use the `search_syntax` and `search_by :text` macros:
+    class ContactFilter
+      include Minidusen::Filter
 
-    class Contact < ActiveRecord::Base
-
-      ...
-
-      search_syntax do
-
-        search_by :text do |scope, phrases|
-          columns = [:name, :street, :city, :email]
-          scope.where_like(columns => phrases)
-        end
-
+      filter :text do |scope, phrases|
+        columns = [:name, :email]
+        scope.where_like(columns => phrases)
       end
 
     end
 
+We can now use `ContactFilter` to filter a scope of `Contact` records:
 
-Minidusen will tokenize the query into individual phrases and call the `search_by :text` block with it. The block is expected to return a scope that filters by the given phrases.
+    # We start by building a scope of all contacts.
+    # No SQL query is made.
+    all_contacts = Contact.all
+    # => ActiveRecord::Relation
 
-If, for example, we call `Contact.search('coworking fooville "market ave"')`
-the block supplied to `search_by :text` is called with the following arguments:
+    # Now we filter the scope to only contain contacts with "gmail" in either :name or :email column.
+    # Again, no SQL query is made.
+    gmail_contacts = ContactFilter.new.filter(all_contacts, 'gmail')
+    # => ActiveRecord::Relation
 
-    |Contact, ['coworking', 'fooville', 'market ave']|
+    # Inspect the filtered scope.
+    gmail_contacts.to_sql
+    # => "SELECT * FROM contacts WHERE name LIKE '%gmail%' OR email LIKE '%gmail%'"
+
+    # Finally we load the scope to produce an array of Contact records.
+    gmail_contacts.to_a
+    # => Array
 
 
-The resulting scope chain is your `Contact` model filtered by
-the given query:
+### Filtering scopes with existing conditions
 
-     > Contact.search('coworking fooville "market ave"')
-    => Contact.where_like([:name, :street, :city, :email] => ['coworking', 'fooville', 'market ave'])
+Note that you can also pass a scope with existing conditions to `ContactFilter#filter`. The returned scope will contain both the existing conditions and the conditions from the filter:
 
-### What where_like does under the hood
+    published_contacts = Contact.where(published: true)
+    # => ActiveRecord::Relation
 
-Note that `where_like` is an utility method that comes with the Minidusen gem.
-It takes one or more column names and one or more phrases and generates an SQL fragment
-that looks roughly like the following:
+    published_contacts.to_sql
+    # => "SELECT * FROM contacts WHERE (published = 1)"
 
-    ( contacts.name LIKE "%coworking%"    OR 
-      contacts.street LIKE "%coworking%"  OR 
-      contacts.email LIKE "%coworking%"   OR 
-      contacts.email LIKE "%coworking%" ) AND
-    ( contacts.name LIKE "%fooville%"     OR 
-      contacts.street LIKE "%fooville%"   OR 
-      contacts.email LIKE "%fooville%"    OR 
-      contacts.email LIKE "%fooville%" )  AND
-    ( contacts.name LIKE "%market ave%"   OR 
-      contacts.street LIKE "%market ave%" OR 
-      contacts.email LIKE "%market ave%"  OR 
-      contacts.email LIKE "%market ave%" )
+    gmail_contacts = ContactFilter.new.filter(published_contacts, 'gmail')
+    # => ActiveRecord::Relation
+
+    gmail_contacts.to_sql
+    # => "SELECT * FROM contacts WHERE (published = 1) AND (name LIKE '%gmail%' OR email LIKE '%gmail%')"
+
+
+### How `where_like` works
+
+The example above uses `where_like`. You can call `where_like` on any scope to produce a new scope where the given array of column names must contain all of the given phrases.
+
+Let's say we call `ContactFilter.new.filter(Contact.published, 'foo "bar baz" bam')`. This will call the block `filter :text do |scope, phrases|` with the following arguments:
+
+    scope == Contact.published
+    phrases == ['foo', 'bar baz', 'bam']
+
+The scope `scope.where_like(columns => phrases)` will now represent the following SQL query:
+
+    SELECT * FROM contacts
+    WHERE (name LIKE "%foo%" OR email LIKE "%foo") AND (email LIKE "%foo%" OR email LIKE "%foo")
 
 You can also use `where_like` to find all the records *not* matching some phrases, using the `:negate` option:
 
-    Contact.where_like({ :name => 'foo' }, { :negate => true })
+    Contact.where_like(name: 'foo', negate: true)
+
 
 Processing queries for qualified fields
 ---------------------------------------
 
 Google supports queries like `filetype:pdf` that filters records by some criteria without performing a full text search. Minidusen gives you a simple way to support such search syntax.
 
-### Setup and usage
+Let's support a query like `email:foo@bar.com` to explictly search for a contact's email address, without filtering against other columns.
 
-We now want to process a qualified query like `email:foo@bar.com` to
-explictily search for a contact's email address, without going through
-a full text search.
+We can learn this syntax by adding a `filter:email` instruction
+to our `ContactFilter` class`:
 
-We can learn this syntax by adding a `search_by :email` instruction
-to our model:
-
-    search_syntax do
-
-      search_by :text do |scope, phrases|
-        ...
-      end
+    class ContactFilter
+      include Minidusen::Filter
 
       search_by :email do |scope, email|
-        scope.where(:email => email)
+        scope.where(emai: email)
+      end
+
+      search_by :text do |scope, phrases|
+        columns = [:name, :email]
+        scope.where_like(columns => phrases)
       end
 
     end
 
+We can now explicitly search for a user's e-mail address:
 
-The result is this:
-
-     > Contact.search('email:foo@bar.com')
-    => Contact.where(:email => 'foo@bar.com')
+    ContactFilter.new.filter(Contact, 'email:foo@bar.com').to_sql
+    # => "SELECT * FROM contacts WHERE email='foo@bar.com'"
 
 
-Note that you can combine text tokens and field tokens:
-
-     > Contact.search('fooville email:foo@bar.com')
-    => Contact.where_like(columns => 'fooville').where(:email => 'foo@bar.com')
-    
 ### Caveat
 
-If you search for a phrase containing a colon (e.g. `deploy:rollback`), Minidusen
-will mistake the first part as a – nonexistent – qualifier and return an empty
-set.
+If you search for a phrase containing a colon (e.g. `deploy:rollback`), Minidusen will mistake the first part as a – nonexistent – qualifier and return an empty set.
 
-To prevent that, prefix your query with the default qualifier `text`:
+To prevent that, search for a phrase:
 
-    text:deploy:rollback
-
+    "deploy:rollback"
 
 
 Supported Rails versions
@@ -149,22 +166,15 @@ Minidusen is tested on:
 If you need support for platforms not listed above, please submit a PR!
 
 
-Installation
-------------
-
-In your `Gemfile` say:
-
-    gem 'minidusen'
-
-Now run `bundle install` and restart your server.
-
-
 Development
 -----------
 
-- Test applications for various Rails versions lives in `spec`.
-- You need to create a MySQL database and put credentials into `spec/shared/app_root/config/database.yml`.
-- You can bundle all test applications by saying `bundle exec rake all:bundle`
+- We currently develop using Ruby 2.2.4 (see `.ruby-version`) since that version works for all versions of ActiveRecord that we support.
+- There are tests in `spec`. We only accept PRs with tests.
+- Put your database credentials into `spec/support/database.yml`. There's a `database.sample.yml` you can use as a template.
+- Create a database `minidusen_test` in both MySQL and PostgreSQL.
+- There are gem bundles in `gemfiles` for each combination of ActiveRecord version and database type that we support.
+- You can bundle all test applications by saying `bundle exec rake all:install`
 - You can run specs from the project root by saying `bundle exec rake all:spec`.
 
 If you would like to contribute:
@@ -173,7 +183,7 @@ If you would like to contribute:
 - Push your changes **with passing specs**.
 - Send me a pull request.
 
-I'm very eager to keep this gem lightweight and on topic. If you're unsure whether a change would make it into the gem, [talk to me beforehand](mailto:henning.koch@makandra.de).
+Note that we're very eager to keep this gem lightweight. If you're unsure whether a change would make it into the gem, [talk to me beforehand](mailto:henning.koch@makandra.de).
 
 
 Credits

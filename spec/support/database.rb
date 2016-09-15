@@ -1,27 +1,23 @@
 require 'yaml'
 
-# pg?
+database_config_file = ENV['TRAVIS'] ? 'database.travis.yml' : 'database.yml'
+database_config_file = File.join(File.dirname(__FILE__), database_config_file)
+File.exists?(database_config_file) or raise "Missing database configuration file: #{database_config_file}"
+
+database_config = YAML.load_file(database_config_file)
+
+connection_config = {}
+
 case ENV['BUNDLE_GEMFILE']
-when /pg/
-  if ENV['TRAVIS']
-    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'minidusen_test', :username => 'postgres')
-  else
-    ActiveRecord::Base.establish_connection(:adapter => 'postgresql', :database => 'minidusen_test')
-  end
-# mysql2?
+when /pg/, /postgres/
+  connection_config = database_config['postgresql'].merge(adapter: 'postgresql')
 when /mysql2/
-  config = { :adapter => 'mysql2', :encoding => 'utf8', :database => 'minidusen_test' }
-  custom_config_path = File.join(File.dirname(__FILE__), 'database.yml')
-  if File.exists?(custom_config_path)
-    custom_config = YAML.load_file(custom_config_path)
-    config.merge!(custom_config)
-  end
-  ActiveRecord::Base.establish_connection(config)
-when /sqlite3/
-  ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':memory:')
+  connection_config = database_config['mysql'].merge(adapter: 'mysql2', encoding: 'utf8')
 else
   raise "Unknown database type in Gemfile suffix: #{ENV['BUNDLE_GEMFILE']}"
 end
+
+ActiveRecord::Base.establish_connection(connection_config)
 
 
 connection = ::ActiveRecord::Base.connection
