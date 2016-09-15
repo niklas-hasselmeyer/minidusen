@@ -45,7 +45,7 @@ module Minidusen
 
     def append_excludes(matches, exclude_query)
       excluded_records = apply_query(matches.origin_class, exclude_query)
-      qualified_id_field = "#{excluded_records.table_name}.#{excluded_records.primary_key}"
+      qualified_id_field = Util.qualify_column_name(excluded_records, excluded_records.primary_key)
       exclude_sql = "#{qualified_id_field} NOT IN (#{excluded_records.select(qualified_id_field).to_sql})"
       matches.where(exclude_sql)
     end

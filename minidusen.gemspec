@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.authors = ["Henning Koch"]
   s.email = 'henning.koch@makandra.de'
   s.homepage = 'https://github.com/makandra/minidusen'
-  s.summary = 'Low-technology search for ActiveRecord with MySQL or PostgreSQL'
+  s.summary = 'Low-tech search for ActiveRecord with MySQL or PostgreSQL'
   s.description = s.summary
   s.license = 'MIT'
 

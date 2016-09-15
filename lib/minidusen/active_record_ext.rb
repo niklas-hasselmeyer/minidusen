@@ -26,7 +26,7 @@ module Minidusen
             like_expression = Minidusen::Util.like_expression(phrase)
             bindings = [like_expression] * fields.size
             conditions = [ phrase_with_placeholders, *bindings ]
-            scope = Util.append_scope_conditions(scope, conditions)
+            scope = scope.where(conditions)
           end
         end
         scope
