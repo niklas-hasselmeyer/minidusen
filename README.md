@@ -30,7 +30,9 @@ Installation
 
 In your `Gemfile` say:
 
-    gem 'minidusen'
+```ruby
+gem 'minidusen'
+```
 
 Now run `bundle install` and restart your server.
 
@@ -48,53 +50,57 @@ end
 
 We create a new class `ContactFilter` that will describe the searchable columns:
 
-    class ContactFilter
-      include Minidusen::Filter
+```ruby
+class ContactFilter
+  include Minidusen::Filter
 
-      filter :text do |scope, phrases|
-        columns = [:name, :email]
-        scope.where_like(columns => phrases)
-      end
+  filter :text do |scope, phrases|
+    columns = [:name, :email]
+    scope.where_like(columns => phrases)
+  end
 
-    end
+end
+```
 
 We can now use `ContactFilter` to filter a scope of `Contact` records:
 
-    # We start by building a scope of all contacts.
-    # No SQL query is made.
-    all_contacts = Contact.all
-    # => ActiveRecord::Relation
+```ruby
+# We start by building a scope of all contacts.
+# No SQL query is made.
+all_contacts = Contact.all
+# => ActiveRecord::Relation
 
-    # Now we filter the scope to only contain contacts with "gmail" in either :name or :email column.
-    # Again, no SQL query is made.
-    gmail_contacts = ContactFilter.new.filter(all_contacts, 'gmail')
-    # => ActiveRecord::Relation
+# Now we filter the scope to only contain contacts with "gmail" in either :name or :email column.
+# Again, no SQL query is made.
+gmail_contacts = ContactFilter.new.filter(all_contacts, 'gmail')
+# => ActiveRecord::Relation
 
-    # Inspect the filtered scope.
-    gmail_contacts.to_sql
-    # => "SELECT * FROM contacts WHERE name LIKE '%gmail%' OR email LIKE '%gmail%'"
+# Inspect the filtered scope.
+gmail_contacts.to_sql
+# => "SELECT * FROM contacts WHERE name LIKE '%gmail%' OR email LIKE '%gmail%'"
 
-    # Finally we load the scope to produce an array of Contact records.
-    gmail_contacts.to_a
-    # => Array
-
+# Finally we load the scope to produce an array of Contact records.
+gmail_contacts.to_a
+# => Array
+```
 
 ### Filtering scopes with existing conditions
 
 Note that you can also pass a scope with existing conditions to `ContactFilter#filter`. The returned scope will contain both the existing conditions and the conditions from the filter:
 
-    published_contacts = Contact.where(published: true)
-    # => ActiveRecord::Relation
+```ruby
+published_contacts = Contact.where(published: true)
+# => ActiveRecord::Relation
 
-    published_contacts.to_sql
-    # => "SELECT * FROM contacts WHERE (published = 1)"
+published_contacts.to_sql
+# => "SELECT * FROM contacts WHERE (published = 1)"
 
-    gmail_contacts = ContactFilter.new.filter(published_contacts, 'gmail')
-    # => ActiveRecord::Relation
+gmail_contacts = ContactFilter.new.filter(published_contacts, 'gmail')
+# => ActiveRecord::Relation
 
-    gmail_contacts.to_sql
-    # => "SELECT * FROM contacts WHERE (published = 1) AND (name LIKE '%gmail%' OR email LIKE '%gmail%')"
-
+gmail_contacts.to_sql
+# => "SELECT * FROM contacts WHERE (published = 1) AND (name LIKE '%gmail%' OR email LIKE '%gmail%')"
+```
 
 ### How `where_like` works
 
@@ -102,18 +108,23 @@ The example above uses `where_like`. You can call `where_like` on any scope to p
 
 Let's say we call `ContactFilter.new.filter(Contact.published, 'foo "bar baz" bam')`. This will call the block `filter :text do |scope, phrases|` with the following arguments:
 
-    scope == Contact.published
-    phrases == ['foo', 'bar baz', 'bam']
+```ruby
+scope == Contact.published
+phrases == ['foo', 'bar baz', 'bam']
+```
 
 The scope `scope.where_like(columns => phrases)` will now represent the following SQL query:
 
-    SELECT * FROM contacts
-    WHERE (name LIKE "%foo%" OR email LIKE "%foo") AND (email LIKE "%foo%" OR email LIKE "%foo")
+```ruby
+SELECT * FROM contacts
+WHERE (name LIKE "%foo%" OR email LIKE "%foo") AND (email LIKE "%foo%" OR email LIKE "%foo")
+```
 
 You can also use `where_like` to find all the records *not* matching some phrases, using the `:negate` option:
 
-    Contact.where_like(name: 'foo', negate: true)
-
+```ruby
+Contact.where_like(name: 'foo', negate: true)
+```
 
 Processing queries for qualified fields
 ---------------------------------------
@@ -125,25 +136,28 @@ Let's support a query like `email:foo@bar.com` to explictly search for a contact
 We can learn this syntax by adding a `filter:email` instruction
 to our `ContactFilter` class`:
 
-    class ContactFilter
-      include Minidusen::Filter
+```ruby
+class ContactFilter
+  include Minidusen::Filter
 
-      search_by :email do |scope, email|
-        scope.where(emai: email)
-      end
+  search_by :email do |scope, email|
+    scope.where(emai: email)
+  end
 
-      search_by :text do |scope, phrases|
-        columns = [:name, :email]
-        scope.where_like(columns => phrases)
-      end
+  search_by :text do |scope, phrases|
+    columns = [:name, :email]
+    scope.where_like(columns => phrases)
+  end
 
-    end
+end
+```
 
 We can now explicitly search for a user's e-mail address:
 
-    ContactFilter.new.filter(Contact, 'email:foo@bar.com').to_sql
-    # => "SELECT * FROM contacts WHERE email='foo@bar.com'"
-
+```ruby
+ContactFilter.new.filter(Contact, 'email:foo@bar.com').to_sql
+# => "SELECT * FROM contacts WHERE email='foo@bar.com'"
+```
 
 ### Caveat
 
