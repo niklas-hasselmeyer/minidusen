@@ -10,6 +10,7 @@ describe Minidusen::Parser do
     it 'should not consider the dash to be a word boundary' do
       query = Minidusen::Parser.parse('Baden-Baden')
       query.collect(&:value).should == ['Baden-Baden']
+      raise "foo"
     end
 
     it 'should parse umlauts and accents' do
