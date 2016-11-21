@@ -2,6 +2,10 @@ module Minidusen
   module ActiveRecordExtensions
     module ClassMethods
 
+      def filter_like(conditions, options = {})
+
+      end
+
       def where_like(conditions, options = {})
         scope = scoped
 

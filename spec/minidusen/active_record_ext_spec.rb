@@ -42,4 +42,20 @@ describe ActiveRecord::Base do
 
   end
 
+  describe '.having_like' do
+
+    it 'filters a result set if a word appears in any of the given expressions' do
+      match1 = User.create!(:name => 'Alice', :city => 'Augsburg')
+      match2 = User.create!(:name => 'Andrew', :city => 'Augsburg')
+      no_match = User.create!(:name => 'Bob', :city => 'XXXX')
+
+      scope = User
+      scope = scope.select('*, city AS town')
+      scope.having_like([:town] => 'Augsburg').to_a.should =~ [match1, match2]
+    end
+
+    it 'has no idea how that would work with exclusion ("-word")'
+
+  end
+
 end
